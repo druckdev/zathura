@@ -980,6 +980,7 @@ bool sc_search(girara_session_t* session, girara_argument_t* argument, girara_ev
       pos_x += (center_x - (double)cell_width / 2) / (double)doc_width;
     }
 
+    // TODO: jump back if search fails with incremental-search
     /* move to position */
     zathura_jumplist_add(zathura);
     position_set(zathura, pos_x, pos_y);
