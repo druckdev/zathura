@@ -393,11 +393,14 @@ static void zathura_page_widget_set_property(GObject* object, guint prop_id, con
         if (link != NULL) {
           /* redraw link area */
           zathura_rectangle_t rectangle = recalc_rectangle(priv->page, zathura_link_get_position(link));
+          rectangle.y2 += 3;
           redraw_rect(pageview, &rectangle);
 
           /* also redraw area for link hint */
-          rectangle.x2 = rectangle.x1 + text.width;
-          rectangle.y1 = rectangle.y2 - text.height;
+          rectangle.x1 = rectangle.x2;
+          rectangle.x2 += text.width;
+          rectangle.y2 = rectangle.y1;
+          rectangle.y1 -= text.height;
           redraw_rect(pageview, &rectangle);
         }
       }
@@ -607,15 +610,26 @@ static gboolean zathura_page_widget_draw(GtkWidget* widget, cairo_t* cairo) {
           /* draw position */
           const GdkRGBA color = zathura->ui.colors.highlight_color;
           cairo_set_source_rgba(cairo, color.red, color.green, color.blue, color.alpha);
-          cairo_rectangle(cairo, rectangle.x1, rectangle.y1, (rectangle.x2 - rectangle.x1),
+          cairo_rectangle(cairo, rectangle.x1, rectangle.y1 + 3, (rectangle.x2 - rectangle.x1),
                           (rectangle.y2 - rectangle.y1));
           cairo_fill(cairo);
 
-          /* draw text */
-          const GdkRGBA color_fg = zathura->ui.colors.highlight_color_fg;
-          cairo_set_source_rgba(cairo, color_fg.red, color_fg.green, color_fg.blue, color_fg.alpha);
-          cairo_move_to(cairo, rectangle.x1 + 1, rectangle.y2 - 1);
           char* link_number = g_strdup_printf("%i", priv->links.offset + ++link_counter);
+
+          /* draw text background */
+          cairo_text_extents_t text = get_text_extents(link_number, zathura, CAIRO_FONT_WEIGHT_BOLD);
+          //gdk_cairo_set_source_rgba(cairo, &color);
+          cairo_set_source_rgba(cairo, color.red, color.green, color.blue, 1.0);
+          cairo_rectangle(cairo, rectangle.x2, rectangle.y1 - text.height,
+                          text.width, text.height);
+          cairo_fill(cairo);
+
+          /* draw text */
+          // TODO: use gdk_cairo_set_source_rgba or alternatively
+          // cairo_set_source_rgb instead of cairo_set_source_rgba?
+          const GdkRGBA color_fg = zathura->ui.colors.highlight_color_fg;
+          cairo_set_source_rgba(cairo, color_fg.red, color_fg.green, color_fg.blue, 1.0);
+          cairo_move_to(cairo, rectangle.x2 + 1, rectangle.y1 - 1);
           cairo_show_text(cairo, link_number);
           g_free(link_number);
         }
