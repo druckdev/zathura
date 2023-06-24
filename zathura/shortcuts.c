@@ -1021,10 +1021,16 @@ sc_search(girara_session_t* session, girara_argument_t* argument,
     position_set(zathura, pos_x, pos_y);
     zathura_jumplist_add(zathura);
   } else if (argument->data != NULL) {
-    const char* input = argument->data;
-    char* escaped_text = g_markup_printf_escaped(_("Pattern not found: %s"), input);
-    girara_notify(session, GIRARA_ERROR, "%s", escaped_text);
-    g_free(escaped_text);
+    bool incremental_search = false;
+    girara_setting_get(session, "incremental-search", &incremental_search);
+    if (!incremental_search) {
+      const char* input = argument->data;
+      char* escaped_text = g_markup_printf_escaped(_("Pattern not found: %s"), input);
+      girara_notify(session, GIRARA_INFO, "%s", escaped_text);
+      g_free(escaped_text);
+    } else {
+      // TODO: Print error message only when confirming the search
+    }
   }
 
   return false;
